@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    
+  </head>
+  <body>
+    <h1>We are learning socket</h1>
+
+    <ul id="message"></ul>
+
+    <form id="form">
+        <label for="">Message Form</label>
+      <input type="text" />
+      <button type="submit">send</button>
+    </form>
+
+    <form id="nameForm">
+        <label for="">Name Form</label>
+      <input type="text" />
+      <button type="submit">send</button>
+    </form>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script defer>
+      const messForm = document.getElementById("form");
+      messForm.hidden=true;
+      const message = document.getElementById("message");
+      const nameForm = document.getElementById("nameForm");
+
+      var socket = io();
+
+      socket.on("receive-msg", (msg) => {
+        displayMsg(msg);
+      });
+
+      socket.on('getName',()=>{
+       nameForm.addEventListener('submit',(e)=>{
+        e.preventDefault();
+        const name = nameForm[0].value;
+        if(!name) return;
+        socket.emit('setName',name)
+       })
+      })
+
+      messForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const msg = messForm[0].value;
+        if (!msg) return;
+        socket.emit("new-message", msg, () => {
+          console.log("Message sent");
+          messForm[0].value = "";
+        });
+      });
+
+      function displayMsg(msg) {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        message.appendChild(li);
+      }
+    </script>
+
+
+  </body>
+</html>
