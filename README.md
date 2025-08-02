@@ -1,7 +1,6 @@
 ```
-Socket.IO তে `socket.on`, `socket.emit`, এবং `io.on` — এই তিনটি খুব গুরুত্বপূর্ণ ফাংশন, এবং এদের কাজ আলাদা। নিচে আমি পরিষ্কারভাবে উদাহরণসহ ব্যাখ্যা করছি:
 
----
+
 
 ## ✅ Summary Table
 
@@ -12,7 +11,7 @@ Socket.IO তে `socket.on`, `socket.emit`, এবং `io.on` — এই তি
 | `socket.emit()` | **Client & Server side** | event পাঠায়, data send করে                   |
 | `io.emit()`     | **Server-side only**     | সকল client কে broadcast message পাঠায়        |
 
----
+
 
 ## 🔄 Communication Flow
 
@@ -126,12 +125,5 @@ socket.on('chat', (msg) => {
 
 ---
 
-চাও কি আমি তোমাকে:
-
-* 🔐 Authenticated socket connection?
-* 🗺️ Real-time location tracking?
-* 📦 Parcel status update with socket?
-
-— তাহলে বলে দাও: **“Socket.IO real project integration daw”** ✅
 
 ```
