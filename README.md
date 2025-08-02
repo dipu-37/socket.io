@@ -1,7 +1,5 @@
 
 
-```
-
 ## ✅ Summary Table
 
 | Function        | ব্যবহার হয় কোথায়?        | উদ্দেশ্য কী?                                 |
@@ -12,7 +10,6 @@
 | `io.emit()`     | **Server-side only**     | সকল client কে broadcast message পাঠায়        |
 
 
-```
 ---
 
 ## 🔄 Communication Flow
