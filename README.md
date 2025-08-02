@@ -1,6 +1,6 @@
 ```
 
-
+```
 
 ## ✅ Summary Table
 
@@ -12,7 +12,7 @@
 | `io.emit()`     | **Server-side only**     | সকল client কে broadcast message পাঠায়        |
 
 
-
+```
 ## 🔄 Communication Flow
 
 ### 🧭 1. `io.on('connection', socket => {...})`
