@@ -37,14 +37,24 @@ io.on("connection", (socket) => {
     socket.name = name;
     cb();
     const activeUsers = await getOnlineUsers();
-    console.log(activeUsers);
+    io.emit("get_active_users", activeUsers);
   });
 
-  socket.on("disconnect",async()=>{
-    const activeUser = await getOnlineUsers();
-    console.log(activeUser)
-  })
+  
 
+  // disconnect event
+  socket.on("disconnect", async () => {
+    const activeUser = await getOnlineUsers();
+    io.emit("get_active_users", activeUser);
+  });
+
+  //msg event
+  socket.on("send_a_msg",(data,cb)=>{
+    const id = data.id;
+    const msg = data.msg;
+    io.to(id).emit("receive_a_message",data,socket.id);
+    cb();
+  })
 });
 
 expressHTTPServer.listen(3000, () => {
