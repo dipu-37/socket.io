@@ -34,18 +34,40 @@ io.on("connection", (socket) => {
 
   // get rooms
   const getPublicRoom = async () => {
-    const rooms =await io.sockets.adapter.rooms;
-    const sids =await io.sockets.adapter.sids;
-    const roomKeys =[... rooms.keys()];
+    const rooms = await io.sockets.adapter.rooms; // (রুম আইডি → কে কে আছে)
+    const sids = await io.sockets.adapter.sids; // self-rooms মানে socket ID গুলো নিজেই নিজে রুম
+    const allSockets = await io.sockets.sockets; //সব connected socket/user info
+
+    const roomKeys = [...rooms.keys()];
     const sidKeys = [...sids.keys()];
 
-    const publicRoomIds = [];
-    for(let roomId of roomKeys){
-      if(!sidKeys.includes(roomId)){
-         publicRoomIds.push(roomId);
+    const publicRooms = []; //roomName
+    let roomId = 0;
+    for (let roomName of roomKeys) {
+      // public room
+      if (!sidKeys.includes(roomName)) {
+        const participantSet = rooms.get(roomName); //ঐ রুমে কে কে আছে (Set of socketId)
+        const size = participantSet.size;
+
+        const participants = [];
+        for (let id of [...participantSet]) {
+          const userSocket = allSockets.get(id); //socket ID দিয়ে ইউজার/ক্লায়েন্টের info পাওয়া যাচ্ছে
+          participants.push({
+            id: userSocket.id,
+            name: userSocket.name,
+          });
+        }
+
+        publicRooms.push({
+          id: "a" + roomId + Date.now(),
+          roomName,
+          size,
+          participants
+        });
+        ++roomId;
       }
     }
-    
+    return publicRooms;
   };
 
   // set name event
@@ -74,11 +96,11 @@ io.on("connection", (socket) => {
   // create a public room
   socket.on("create_room", async (roomName, cb) => {
     socket.join(roomName);
-    await getPublicRoom();
+    const publicRooms = await getPublicRoom();
+    console.log(publicRooms);
+    io.emit('getPublicRooms',publicRooms)
+
   });
-
-
-
 });
 
 expressHTTPServer.listen(3000, () => {
