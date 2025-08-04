@@ -76,13 +76,16 @@ io.on("connection", (socket) => {
     cb();
     const activeUsers = await getOnlineUsers();
     io.emit("get_active_users", activeUsers);
-    await getPublicRoom();
+    const publicRooms = await getPublicRoom();
+    io.emit('getPublicRooms',publicRooms)
   });
 
   // disconnect event
   socket.on("disconnect", async () => {
     const activeUser = await getOnlineUsers();
     io.emit("get_active_users", activeUser);
+    const publicRooms = await getPublicRoom();
+    io.emit('getPublicRooms',publicRooms)
   });
 
   //send a private message
@@ -99,8 +102,15 @@ io.on("connection", (socket) => {
     const publicRooms = await getPublicRoom();
     console.log(publicRooms);
     io.emit('getPublicRooms',publicRooms)
-
+    cb();
   });
+
+  socket.on("joinRoom",async (roomName,cb)=>{
+    socket.join(roomName);
+    const publicRooms = await getPublicRoom();
+    io.emit('getPublicRooms',publicRooms)
+    cb();
+  })
 });
 
 expressHTTPServer.listen(3000, () => {

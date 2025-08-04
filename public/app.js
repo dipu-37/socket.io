@@ -12,9 +12,13 @@ const msgForm = document.getElementById("msg_form");
 const messages = document.querySelector(".messages");
 const roomCreateBtn = document.getElementById("create-btn");
 const roomNameInputEl = document.getElementById("create_room");
-
+const publicRoomAccordion = document.getElementById(
+  "accordionPanelsStayOpenExample"
+);
+const modal = document.querySelector(".modal");
 // global variable
-let activeUser;
+let activeUsers;
+let publicRooms;
 
 //set name
 nameForm.addEventListener("submit", (e) => {
@@ -25,79 +29,139 @@ nameForm.addEventListener("submit", (e) => {
     nameFormArea.hidden = true;
     roomArea.hidden = false;
   });
+});
 
-  // get active users
-  socket.on("get_active_users", (users) => {
-    activeUser = users;
-    OnlineUserList.innerHTML = "";
-    activeUser.forEach((user) => {
-      const li = document.createElement("li");
-      li.style.cursor = "pointer";
-      li.addEventListener("click", () => {
-        openCanvas(user);
-        messages.innerHTML = "";
-      });
-      li.textContent = user.id == socket.id ? "You" : user.name;
-      li.dataset.id = user.id;
-      li.classList.add("list-group-item");
-      li.classList.add("onLine");
-      OnlineUserList.appendChild(li);
-    });
-  });
-
-  //send private msg
-  msgForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const msg = msgForm[0].value;
-    const id = msgForm[1].value;
-
-    if (msg) {
-      socket.emit("send_a_msg", { msg, id }, () => {
-        console.log("send msg");
-        const li = document.createElement("li");
-        li.classList.add("list-group-item");
-        li.textContent = "You" + ": " + msg;
-
-        messages.appendChild(li);
-        msgForm[0].value = "";
-      });
-    }
-  });
-
-  //receive an event
-  socket.on("receive_a_message", (data, senderId) => {
-    const user = activeUser.find((u) => u.id == data.id);
-    openCanvas(user);
-
-    const sender = activeUser.find((u) => u.id == senderId);
-    openCanvas(sender);
-
+// get active users
+socket.on("get_active_users", (users) => {
+  activeUsers = users;
+  OnlineUserList.innerHTML = "";
+  activeUsers.forEach((user) => {
     const li = document.createElement("li");
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => {
+      openCanvas(user);
+      messages.innerHTML = "";
+    });
+    li.textContent = user.id == socket.id ? "You" : user.name;
+    li.dataset.id = user.id;
     li.classList.add("list-group-item");
-    li.textContent = sender.name + ": " + data.msg;
-
-    messages.appendChild(li);
-  });
-
-  // open the msg canvas
-  function openCanvas(user) {
-    innerCanvas.hidden = false;
-    displayName.textContent = user.name;
-    msgForm[1].value = user.id;
-  }
-
-  // create room functionality
-  roomCreateBtn.addEventListener("click", (e) => {
-    const roomName = roomNameInputEl.value;
-    if (roomName) {
-      socket.emit("create_room", roomName, () => {
-        console.log("Created");
-      });
-    }
-  });
-
-  // get public rooms
-  socket.on("getPublicRooms", (publicRooms) => {
-    console.log(publicRooms);
+    li.classList.add("onLine");
+    OnlineUserList.appendChild(li);
   });
 });
+
+//send private msg
+msgForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const msg = msgForm[0].value;
+  const id = msgForm[1].value;
+
+  if (msg) {
+    socket.emit("send_a_msg", { msg, id }, () => {
+      console.log("send msg");
+      const li = document.createElement("li");
+      li.classList.add("list-group-item");
+      li.textContent = "You" + ": " + msg;
+
+      messages.appendChild(li);
+      msgForm[0].value = "";
+    });
+  }
+});
+
+//receive an event
+socket.on("receive_a_message", (data, senderId) => {
+  const user = activeUsers.find((u) => u.id == data.id);
+  openCanvas(user);
+
+  const sender = activeUsers.find((u) => u.id == senderId);
+  openCanvas(sender);
+
+  const li = document.createElement("li");
+  li.classList.add("list-group-item");
+  li.textContent = sender.name + ": " + data.msg;
+
+  messages.appendChild(li);
+});
+
+// open the msg canvas
+function openCanvas(user) {
+  innerCanvas.hidden = false;
+  displayName.textContent = user.name;
+  msgForm[1].value = user.id;
+}
+
+// create room functionality
+roomCreateBtn.addEventListener("click", (e) => {
+  const roomName = roomNameInputEl.value;
+  if (roomName) {
+    socket.emit("create_room", roomName, () => {
+      console.log("Created");
+      modalClose();
+    });
+  }
+});
+
+// get public rooms
+socket.on("getPublicRooms", (publicRooms) => {
+  console.log(publicRooms);
+  publicRoomAccordion.innerHTML = "";
+  publicRooms.forEach((room) => {
+    const accordionItem = document.createElement("div");
+    accordionItem.classList.add("accordion-item");
+
+    accordionItem.innerHTML = `
+        <h2 class="accordion-header" id="${room.id}id">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#${room.id}option"
+                  aria-expanded="false"
+                  aria-controls="${room.id}option"
+                  
+                >
+                  ${room.roomName} (${room.size})
+    
+                  <span onclick="joinRoom('${room.roomName}')"  class="material-symbols-outlined">
+                      group_add
+                  </span>
+
+                  <span 
+                  onclick="leaveRoom('${room.roomName}')"
+                  class="material-symbols-outlined"> logout </span>
+                </button>
+              </h2>
+              <div
+                id="${room.id}option"
+                class="accordion-collapse collapse"
+                aria-labelledby="${room.id}id"
+              >
+                <div class="accordion-body">
+                  <ul id="participants"></ul>
+                </div>
+              </div>`;
+
+    const participantUl = accordionItem.querySelector("#participants");
+    room?.participants?.forEach((participant) => {
+      const li = document.createElement("li");
+      li.textContent = participant.name;
+      participantUl.appendChild(li);
+    });
+
+    publicRoomAccordion.appendChild(accordionItem);
+  });
+});
+
+function joinRoom(roomName) {
+  socket.emit("joinRoom", roomName, () => {});
+}
+
+function modalClose() {
+  modal.classList.remove("show");
+  modal.style.display = "none";
+  roomNameInputEl.value = "";
+  document.body.classList.remove("modal-open");
+  document.body.style = {};
+  document.querySelector(".modal-backdrop")?.remove("show");
+}
