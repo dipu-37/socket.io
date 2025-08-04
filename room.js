@@ -32,15 +32,30 @@ io.on("connection", (socket) => {
     return activeUser;
   };
 
+  // get rooms
+  const getPublicRoom = async () => {
+    const rooms =await io.sockets.adapter.rooms;
+    const sids =await io.sockets.adapter.sids;
+    const roomKeys =[... rooms.keys()];
+    const sidKeys = [...sids.keys()];
+
+    const publicRoomIds = [];
+    for(let roomId of roomKeys){
+      if(!sidKeys.includes(roomId)){
+         publicRoomIds.push(roomId);
+      }
+    }
+    
+  };
+
   // set name event
   socket.on("setName", async (name, cb) => {
     socket.name = name;
     cb();
     const activeUsers = await getOnlineUsers();
     io.emit("get_active_users", activeUsers);
+    await getPublicRoom();
   });
-
-  
 
   // disconnect event
   socket.on("disconnect", async () => {
@@ -48,13 +63,22 @@ io.on("connection", (socket) => {
     io.emit("get_active_users", activeUser);
   });
 
-  //msg event
-  socket.on("send_a_msg",(data,cb)=>{
+  //send a private message
+  socket.on("send_a_msg", (data, cb) => {
     const id = data.id;
     const msg = data.msg;
-    io.to(id).emit("receive_a_message",data,socket.id);
+    io.to(id).emit("receive_a_message", data, socket.id);
     cb();
-  })
+  });
+
+  // create a public room
+  socket.on("create_room", async (roomName, cb) => {
+    socket.join(roomName);
+    await getPublicRoom();
+  });
+
+
+
 });
 
 expressHTTPServer.listen(3000, () => {
